@@ -1,0 +1,22 @@
+services:
+  ocr-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEFAULT_LANG=korean
+      - OCR_WORKERS=2
+      - DEBUG=false
+    volumes:
+      # PaddleOCR 모델 캐시 유지 (재시작 시 재다운로드 방지)
+      - paddleocr-models:/root/.paddleocr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # 모델 로딩 시간 고려
+
+volumes:
+  paddleocr-models:
