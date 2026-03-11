@@ -19,10 +19,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY api/ ./api/
 
 # 포트 노출
-EXPOSE 8000
+EXPOSE 9125
 
 # PaddleOCR 로그 최소화
 ENV PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
 
 # 실행
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "9125"]
