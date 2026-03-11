@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     # 서버
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = 9125
 
     # OCR 설정
     DEFAULT_LANG: str = "korean"
@@ -42,8 +42,18 @@ class Settings(BaseSettings):
     # ThreadPoolExecutor worker 수 (CPU bound OCR)
     OCR_WORKERS: int = 2
 
+    # OCR 감지 모델 — mobile(저메모리/EC2 8GB 권장)
+    # PP-OCRv5_mobile_det : ~886 MiB  (EC2 8GB 안정)
+    # PP-OCRv5_server_det : ~17 GiB 피크 (EC2 비구널)
+    OCR_DET_MODEL: str = "PP-OCRv5_mobile_det"
+
+    # OCR 인식 모델 — 한국어 특화 mobile_rec
+    OCR_REC_MODEL: str = "korean_PP-OCRv5_mobile_rec"
+
     # PDF 렌더링 DPI
-    PDF_DPI: int = 200
+    # PDF 렌더링 DPI — 높을수록 해상도↑ 한국어 인식률↑ (메모리/속도 트레이드오프)
+    # 150: 빠름/저데이터 | 200: 기본값 | 300: 고해상도 한국어 최적화
+    PDF_DPI: int = 300
 
 
 settings = Settings()

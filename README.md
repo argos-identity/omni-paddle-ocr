@@ -1,92 +1,217 @@
-# paddle-ocr
+# omni-paddle-ocr
 
-## pyenv install (mac)
+PaddleOCR 기반 FastAPI OCR API 서버.  
+한국어 문서(PDF/이미지) OCR에 최적화되어 있으며, Docker로 배포합니다.
 
-brew install pyenv
+---
 
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
+## 확정 구성 (Confirmed Configuration)
 
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
+| 항목 | 값 | 비고 |
+|------|-----|------|
+| OCR Detection 모델 | `PP-OCRv5_mobile_det` | EC2 8GB 안정 (~2.5 GiB 피크) |
+| OCR Recognition 모델 | `korean_PP-OCRv5_mobile_rec` | 한국어 특화 |
+| PDF 렌더링 DPI | `300` | 한국어 인식률 최적화 (DPI 200 대비 대폭 향상) |
+| 포트 | `9125` | |
+| 권장 서버 메모리 | **8GB 이상** | OCR 처리 중 피크 ~2.5 GiB |
 
-echo 'eval "$(pyenv init -)"' >> ~/.zshrc
+> **메모리 실측 결과**  
+> `server_det` 계열은 처리 중 최대 **17 GiB** 까지 치솟아 EC2 8/16GB 모두 OOM.  
+> `mobile_det + DPI 300` 조합이 정확도·메모리 균형점.
 
-# 적용
-source ~/.zshrc
+---
 
-## Python 3.10 설치 및 PaddleOCR용 환경 세팅 (mac)
+## API 명세 (Swagger)
 
-## Python 3.10 설치
+서버 기동 후 아래 주소에서 확인:
 
-pyenv install 3.10.14
+```
+http://<Server-IPAddress>:9125/docs
+```
 
-## 프로젝트 폴더에서 버전 고정
+예시: `http://192.168.0.10:9125/docs`
 
-cd your-project
+---
 
-pyenv local 3.10.14
+## 엔드포인트 요약
 
-## 가상환경 생성
+| Method | Path | 설명 |
+|--------|------|------|
+| `GET` | `/api/v1/health` | 헬스체크, 로딩된 언어 확인 |
+| `POST` | `/api/v1/ocr` | PDF/이미지 OCR 처리 |
 
-python -m venv .venv
+### POST `/api/v1/ocr` 요청 예시
 
-source .venv/bin/activate
+```bash
+curl -X POST http://<Server-IPAddress>:9125/api/v1/ocr \
+  -F "file=@document.pdf" \
+  -F "lang=korean"
+```
 
-## PaddleOCR 설치
+지원 언어: `korean`, `en`, `ch`, `japan`
 
-pip install --upgrade pip
+---
 
-pip install paddlepaddle
+## Docker 빌드 및 실행
 
-pip install paddleocr opencv-python
+### 1. 이미지 빌드
 
+```bash
+docker build -t omni-paddle-ocr .
+```
 
-## pyenv install (ubuntu)
+### 2. 단독 컨테이너 실행
 
-### 의존성 패키지 설치 (필수)
-sudo apt update
+```bash
+docker run -d \
+  --name omni-paddle-ocr \
+  -p 9125:9125 \
+  -v paddleocr-models:/root/.paddlex \
+  -e DEFAULT_LANG=korean \
+  -e OCR_WORKERS=2 \
+  omni-paddle-ocr
+```
 
-sudo apt install -y make build-essential libssl-dev zlib1g-dev \
-  libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
-  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
-  libffi-dev liblzma-dev git
+> 최초 기동 시 모델 자동 다운로드 (~90초 소요).  
+> 볼륨(`paddleocr-models`)에 캐시되므로 재기동 시 즉시 시작.
 
-curl https://pyenv.run | bash
+### 3. 기동 확인
 
-### 쉘 설정 추가
+```bash
+# 헬스체크
+curl http://localhost:9125/api/v1/health
 
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+# 로그 확인
+docker logs -f omni-paddle-ocr
+```
 
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+---
 
-echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+## docker-compose.yml
 
-### 적용
+```yaml
+services:
+  ocr-api:
+    build: .
+    ports:
+      - "9125:9125"
+    environment:
+      - DEFAULT_LANG=korean
+      - OCR_WORKERS=2
+      - DEBUG=false
+    volumes:
+      # PaddleOCR 모델 캐시 유지 (재시작 시 재다운로드 방지)
+      - paddleocr-models:/root/.paddlex
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9125/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # 모델 로딩 시간 고려
 
-source ~/.bashrc
+volumes:
+  paddleocr-models:
+```
 
+### docker-compose 실행
 
-## Python 3.10 설치 및 PaddleOCR용 환경 세팅(ubuntu)
+```bash
+# 빌드 + 기동
+docker compose up -d --build
 
-### Python 3.10 설치
+# 로그 확인
+docker compose logs -f
 
-pyenv install 3.10.14
+# 중지
+docker compose down
+```
 
-### 프로젝트 폴더에서 버전 고정
+---
 
-cd your-project
+## 빌드 후 테스트 방법
 
-pyenv local 3.10.14
+### 방법 1 — curl (호스트에서)
 
-### 가상환경 생성
+```bash
+# 헬스체크
+curl http://localhost:9125/api/v1/health
 
-python -m venv .venv
+# PDF OCR 테스트
+curl -X POST http://localhost:9125/api/v1/ocr \
+  -F "file=@/path/to/document.pdf" \
+  -F "lang=korean"
+```
 
-source .venv/bin/activate
+### 방법 2 — Python httpx (컨테이너 내부에서)
 
-#### PaddleOCR 설치
+```bash
+# PDF 파일을 컨테이너에 복사
+docker cp /path/to/document.pdf omni-paddle-ocr:/tmp/test.pdf
 
-pip install --upgrade pip
+# 컨테이너 내부에서 테스트
+docker exec omni-paddle-ocr python -c "
+import httpx
 
-pip install paddlepaddle
+with open('/tmp/test.pdf', 'rb') as f:
+    resp = httpx.post(
+        'http://localhost:9125/api/v1/ocr',
+        files={'file': ('test.pdf', f, 'application/pdf')},
+        data={'lang': 'korean'},
+        timeout=120
+    )
 
-pip install paddleocr opencv-python
+data = resp.json()
+print(f'페이지 수: {len(data[\"pages\"])}')
+print(f'처리 시간: {data[\"elapsed_ms\"]:.0f}ms')
+print(data['pages'][0]['extracted_text'])
+"
+```
+
+### 방법 3 — Swagger UI
+
+브라우저에서 `http://localhost:9125/docs` 접속 후 직접 파일 업로드 테스트.
+
+---
+
+## 환경 변수
+
+| 변수 | 기본값 | 설명 |
+|------|--------|------|
+| `DEFAULT_LANG` | `korean` | 기본 OCR 언어 |
+| `OCR_WORKERS` | `2` | ThreadPoolExecutor 워커 수 |
+| `DEBUG` | `false` | 디버그 모드 |
+| `PDF_DPI` | `300` | PDF 렌더링 해상도 (높을수록 정확도↑, 속도↓) |
+| `MAX_UPLOAD_SIZE` | `52428800` | 최대 업로드 크기 (기본 50MB) |
+
+---
+
+## 로컬 개발 환경 (Conda)
+
+```bash
+# conda 환경 생성 (Python 3.10)
+conda create -n omni-paddle-ocr python=3.10 -y
+conda activate omni-paddle-ocr
+
+# 의존성 설치
+pip install -r requirements.txt
+pip install pytest pytest-asyncio pytest-cov
+
+# 개발 서버 실행
+uvicorn api.main:app --host 0.0.0.0 --port 9125 --reload
+
+# 테스트 실행
+pytest tests/ -v
+```
+
+---
+
+## 성능 지표 (EC2 기준 실측)
+
+| 지표 | 값 |
+|------|-----|
+| 모델 최초 로딩 | ~20초 (캐시 후) |
+| PDF 1페이지 OCR | ~21초 |
+| 대기 중 메모리 | ~800 MiB |
+| OCR 처리 중 피크 | ~2.5 GiB |
+| 권장 인스턴스 | t3.large (8GB) 이상 |

@@ -2,17 +2,18 @@ services:
   ocr-api:
     build: .
     ports:
-      - "8000:8000"
+      - "9125:9125"
     environment:
       - DEFAULT_LANG=korean
       - OCR_WORKERS=2
       - DEBUG=false
     volumes:
       # PaddleOCR 모델 캐시 유지 (재시작 시 재다운로드 방지)
-      - paddleocr-models:/root/.paddleocr
+      - paddleocr-models:/root/.paddlex
     restart: unless-stopped
+    # deploy.resources.limits 제거 — 메모리 제한 없이 실제 사용량 측정 목적
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:9125/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
