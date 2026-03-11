@@ -150,8 +150,9 @@ docker logs -f omni-paddle-ocr
 
 ```yaml
 services:
-  ocr-api:
+  omni-paddle-ocr:
     build: .
+    container_name: omni-paddle-ocr
     ports:
       - "9125:9125"
     environment:
