@@ -34,23 +34,17 @@ def _compute_metrics(text: str) -> TextMetrics:
     )
 
 
-def _decode_image_bytes(data: bytes) -> np.ndarray:
-    """bytes → numpy BGR 이미지 (OpenCV 형식)"""
-    import cv2
+def _decode_image_bytes(data: bytes) -> "PIL.Image.Image":
+    """bytes → PIL RGB 이미지"""
+    from PIL import Image
 
-    arr = np.frombuffer(data, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    if img is None:
-        raise ValueError(
-            "이미지 디코딩 실패: 지원하지 않는 포맷이거나 손상된 파일입니다."
-        )
+    img = Image.open(io.BytesIO(data)).convert("RGB")
     return img
 
 
-def _pdf_to_images(data: bytes, dpi: int = settings.PDF_DPI) -> List[np.ndarray]:
-    """PDF bytes → 페이지별 numpy BGR 이미지 리스트"""
+def _pdf_to_images(data: bytes, dpi: int = settings.PDF_DPI) -> List["PIL.Image.Image"]:
+    """PDF bytes → 페이지별 PIL RGB 이미지 리스트"""
     import pypdfium2 as pdfium
-    import cv2
 
     pdf = pdfium.PdfDocument(data)
     images = []
@@ -59,20 +53,18 @@ def _pdf_to_images(data: bytes, dpi: int = settings.PDF_DPI) -> List[np.ndarray]
     for page_index in range(len(pdf)):
         page = pdf[page_index]
         bitmap = page.render(scale=scale, rotation=0)
-        pil_img = bitmap.to_pil()
-
-        # PIL → numpy BGR
-        img_rgb = np.array(pil_img.convert("RGB"))
-        img_bgr = img_rgb[:, :, ::-1].copy()
-        images.append(img_bgr)
+        pil_img = bitmap.to_pil().convert("RGB")
+        images.append(pil_img)
 
     pdf.close()
     return images
 
 
-def _run_ocr_on_image(ocr: PaddleOCR, image: np.ndarray) -> List[str]:
-    """단일 이미지에 OCR 실행 → 텍스트 리스트 반환"""
-    result = ocr.predict(image)
+def _run_ocr_on_image(ocr: PaddleOCR, image: "PIL.Image.Image") -> List[str]:
+    """단일 PIL 이미지에 OCR 실행 → 텍스트 리스트 반환"""
+    # PaddleOCR v3.x는 RGB numpy ndarray를 기대함
+    img_array = np.array(image)  # PIL RGB → numpy RGB (H, W, 3)
+    result = ocr.predict(img_array)
     texts = []
     for page_result in result:
         texts.extend(page_result.get("rec_texts", []))
