@@ -10,6 +10,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Tuple
 
+import cv2
 import numpy as np
 
 # PaddleOCR 초기화 로그 최소화
@@ -34,6 +35,30 @@ def _compute_metrics(text: str) -> TextMetrics:
         word_count=len(words),
         line_count=len(lines),
     )
+
+
+def _preprocess_image(image: "PIL.Image.Image") -> "PIL.Image.Image":
+    """
+    OCR 인식률 향상을 위한 이미지 전처리
+    1. 그레이스케일 변환 — 채널 세 개를 하나로 줄여 OCR 집중도출가
+    2. CLAHE — 대비 강화로 흔릷한 텍스트 선명화
+    3. MedianBlur — 도장/인감 영역의 와선 노이즈 억제
+    """
+    from PIL import Image
+
+    img_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+
+    # CLAHE: 클립리미트 8, 타일 그리드 8x8
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)
+
+    # MedianBlur: 커널 3 (도장 노이즈 억제, 엃글림 방지)
+    denoised = cv2.medianBlur(enhanced, 3)
+
+    # RGB로 복원 (정수리 RGB ndarray를 기대함)
+    rgb = cv2.cvtColor(denoised, cv2.COLOR_GRAY2RGB)
+    return Image.fromarray(rgb)
 
 
 def _decode_image_bytes(data: bytes) -> "PIL.Image.Image":
@@ -64,8 +89,8 @@ def _pdf_to_images(data: bytes, dpi: int = settings.PDF_DPI) -> List["PIL.Image.
 
 def _run_ocr_on_image(ocr: PaddleOCR, image: "PIL.Image.Image") -> List[str]:
     """단일 PIL 이미지에 OCR 실행 → 텍스트 리스트 반환"""
-    # PaddleOCR v3.x는 RGB numpy ndarray를 기대함
-    img_array = np.array(image)  # PIL RGB → numpy RGB (H, W, 3)
+    processed = _preprocess_image(image)
+    img_array = np.array(processed)  # PIL RGB → numpy RGB (H, W, 3)
     result = ocr.predict(img_array)
     texts = []
     for page_result in result:
@@ -99,6 +124,7 @@ class OCRService:
                         lambda: PaddleOCR(
                             lang=lang,
                             text_detection_model_name=settings.OCR_DET_MODEL,
+                            text_det_limit_side_len=settings.OCR_DET_LIMIT_SIDE_LEN,
                             **rec_kwargs,
                         ),
                     )

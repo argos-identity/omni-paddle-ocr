@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     # PP-OCRv5_server_det : ~17 GiB 피크 (EC2 비권장)
     OCR_DET_MODEL: str = "PP-OCRv5_mobile_det"
 
+    # 텍스트 감지 시 입력 이미지 최대 장변 길이 (픽셀)
+    # 기본값 736 → 원본 이미지가 크면 축소되어 텍스트 블록 분리 발생
+    # 1280: DPI 300 한국어 문서 최적화
+    OCR_DET_LIMIT_SIDE_LEN: int = 1280
+
     # 언어별 OCR 인식 모델 맵
     # - korean: 한국어 특화 mobile_rec
     # - en: 영어 mobile_rec
@@ -58,12 +63,6 @@ class Settings(BaseSettings):
         "en": "en_PP-OCRv5_mobile_rec",
     }
 
-    # PDF 렌더링 DPI
-    # PDF 렌더링 DPI — 높을수록 해상도↑ 한국어 인식률↑ (메모리/속도 트레이드오프)
-    # 150: 빠름/저데이터 | 200: 기본값 | 300: 고해상도 한국어 최적화
-    PDF_DPI: int = 300
-
-    # PDF 렌더링 DPI
     # PDF 렌더링 DPI — 높을수록 해상도↑ 한국어 인식률↑ (메모리/속도 트레이드오프)
     # 150: 빠름/저데이터 | 200: 기본값 | 300: 고해상도 한국어 최적화
     PDF_DPI: int = 300
