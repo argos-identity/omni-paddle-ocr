@@ -1,6 +1,6 @@
 # omni-paddle-ocr
 
-PaddleOCR 기반 FastAPI OCR API 서버.  
+**PP-OCRv5** (PaddlePaddle 3.0 기반) FastAPI OCR API 서버.  
 한국어 문서(PDF/이미지) OCR에 최적화되어 있으며, Docker로 배포합니다.
 
 ---
@@ -9,6 +9,7 @@ PaddleOCR 기반 FastAPI OCR API 서버.
 
 | 항목 | 값 | 비고 |
 |------|-----|------|
+| **OCR 엔진** | **PP-OCRv5** (PaddlePaddle 3.0 기반) | PaddleOCR 최신 세대 |
 | OCR Detection 모델 | `PP-OCRv5_mobile_det` | EC2 8GB 안정 (~2.5 GiB 피크) |
 | OCR Recognition 모델 | `korean_PP-OCRv5_mobile_rec` / `en_PP-OCRv5_mobile_rec` | 언어별 자동 선택 |
 | PDF 렌더링 DPI | `300` | 한국어 인식률 최적화 (DPI 200 대비 대폭 향상) |
