@@ -14,6 +14,8 @@ import numpy as np
 
 # PaddleOCR 초기화 로그 최소화
 os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
+# oneDNN 비활성화 — CPU 환경에서 ConvertPirAttribute2RuntimeAttribute 에러 방지
+os.environ["FLAGS_use_mkldnn"] = "0"
 
 from paddleocr import PaddleOCR
 
