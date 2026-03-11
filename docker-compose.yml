@@ -5,6 +5,7 @@ services:
       - "9125:9125"
     environment:
       - DEFAULT_LANG=korean
+      - PRELOAD_LANGS=korean,en
       - OCR_WORKERS=2
       - DEBUG=false
       - FLAGS_use_mkldnn=0  # oneDNN 비활성화 (ConvertPirAttribute2RuntimeAttribute 에러 방지)

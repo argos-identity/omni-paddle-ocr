@@ -10,10 +10,10 @@ PaddleOCR 기반 FastAPI OCR API 서버.
 | 항목 | 값 | 비고 |
 |------|-----|------|
 | OCR Detection 모델 | `PP-OCRv5_mobile_det` | EC2 8GB 안정 (~2.5 GiB 피크) |
-| OCR Recognition 모델 | `korean_PP-OCRv5_mobile_rec` | 한국어 특화 |
+| OCR Recognition 모델 | `korean_PP-OCRv5_mobile_rec` / `en_PP-OCRv5_mobile_rec` | 언어별 자동 선택 |
 | PDF 렌더링 DPI | `300` | 한국어 인식률 최적화 (DPI 200 대비 대폭 향상) |
 | 포트 | `9125` | |
-| 권장 서버 메모리 | **8GB 이상** | OCR 처리 중 피크 ~2.5 GiB |
+| 권장 서버 메모리 | **8GB 이상** | korean+en 동시 로딩 시 대기 ~1.6 GiB |
 
 > **메모리 실측 결과**  
 > `server_det` 계열은 처리 중 최대 **17 GiB** 까지 치솟아 EC2 8/16GB 모두 OOM.  
@@ -239,12 +239,36 @@ print(data['pages'][0]['extracted_text'])
 
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
-| `DEFAULT_LANG` | `korean` | 기본 OCR 언어 |
+| `DEFAULT_LANG` | `korean` | 기본 OCR 언어 (lang 파라미터 미지정 시 사용) |
+| `PRELOAD_LANGS` | `korean,en` | 서버 시작 시 사전 로딩할 언어 목록 (쉼표 구분) |
 | `OCR_WORKERS` | `2` | ThreadPoolExecutor 워커 수 |
 | `DEBUG` | `false` | 디버그 모드 |
 | `PDF_DPI` | `300` | PDF 렌더링 해상도 (높을수록 정확도↑, 속도↓) |
 | `MAX_UPLOAD_SIZE` | `52428800` | 최대 업로드 크기 (기본 50MB) |
 | `FLAGS_use_mkldnn` | `0` | oneDNN 비활성화 (CPU 환경 필수) |
+
+### PRELOAD_LANGS 설정 방법
+
+**docker-compose.yml**
+```yaml
+environment:
+  - PRELOAD_LANGS=korean,en
+```
+
+**docker run**
+```bash
+docker run -e PRELOAD_LANGS=korean,en omni-paddle-ocr
+```
+
+**로컬 개발 (환경변수 직접 설정)**
+```bash
+export PRELOAD_LANGS=korean,en
+uvicorn api.main:app --host 0.0.0.0 --port 9125 --reload
+```
+
+> **메모리 참고**  
+> `korean,en` 동시 로딩 시 대기 메모리 ~1.6 GiB (언어당 ~800 MiB).  
+> 한국어만 필요하면 `PRELOAD_LANGS=korean`으로 절약 가능.
 
 ---
 
