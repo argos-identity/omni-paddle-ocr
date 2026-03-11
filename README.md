@@ -40,7 +40,25 @@ http://<Server-IPAddress>:9125/docs
 | `GET` | `/api/v1/health` | 헬스체크, 로딩된 언어 확인 |
 | `POST` | `/api/v1/ocr` | PDF/이미지 OCR 처리 |
 
-### POST `/api/v1/ocr` 요청 예시
+---
+
+### GET `/api/v1/health`
+
+**응답 예시**
+
+```json
+{
+  "status": "ok",
+  "loaded_langs": ["korean"],
+  "version": "1.0.0"
+}
+```
+
+---
+
+### POST `/api/v1/ocr`
+
+**요청**
 
 ```bash
 curl -X POST http://<Server-IPAddress>:9125/api/v1/ocr \
@@ -49,6 +67,44 @@ curl -X POST http://<Server-IPAddress>:9125/api/v1/ocr \
 ```
 
 지원 언어: `korean`, `en`, `ch`, `japan`
+
+**응답 예시**
+
+```json
+{
+  "pages": [
+    {
+      "page": 1,
+      "texts": [
+        "국세청",
+        "사업자등록증명",
+        "주식회사에코아이",
+        "...(인식된 텍스트 배열)"
+      ],
+      "extracted_text": "국세청\n사업자등록증명\n주식회사에코아이\n...",
+      "metrics": {
+        "char_count": 1677,
+        "word_count": 348,
+        "line_count": 106
+      }
+    }
+  ],
+  "total_pages": 1,
+  "elapsed_ms": 21785.75,
+  "lang": "korean",
+  "filename": "document.pdf"
+}
+```
+
+| 필드 | 설명 |
+|------|------|
+| `pages[].texts` | 인식된 텍스트 라인 배열 |
+| `pages[].extracted_text` | 전체 텍스트 (줄바꿈 구분) |
+| `pages[].metrics.char_count` | 총 문자 수 |
+| `pages[].metrics.word_count` | 총 단어 수 |
+| `pages[].metrics.line_count` | 총 라인 수 |
+| `elapsed_ms` | OCR 처리 시간 (ms) |
+| `total_pages` | 처리된 페이지 수 |
 
 ---
 
