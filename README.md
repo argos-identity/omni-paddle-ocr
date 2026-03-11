@@ -159,6 +159,7 @@ services:
       - DEFAULT_LANG=korean
       - OCR_WORKERS=2
       - DEBUG=false
+      - FLAGS_use_mkldnn=0  # oneDNN 비활성화 (ConvertPirAttribute2RuntimeAttribute 에러 방지)
     volumes:
       # PaddleOCR 모델 캐시 유지 (재시작 시 재다운로드 방지)
       - paddleocr-models:/root/.paddlex
@@ -243,6 +244,7 @@ print(data['pages'][0]['extracted_text'])
 | `DEBUG` | `false` | 디버그 모드 |
 | `PDF_DPI` | `300` | PDF 렌더링 해상도 (높을수록 정확도↑, 속도↓) |
 | `MAX_UPLOAD_SIZE` | `52428800` | 최대 업로드 크기 (기본 50MB) |
+| `FLAGS_use_mkldnn` | `0` | oneDNN 비활성화 (CPU 환경 필수) |
 
 ---
 

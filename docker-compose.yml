@@ -7,6 +7,7 @@ services:
       - DEFAULT_LANG=korean
       - OCR_WORKERS=2
       - DEBUG=false
+      - FLAGS_use_mkldnn=0  # oneDNN 비활성화 (ConvertPirAttribute2RuntimeAttribute 에러 방지)
     volumes:
       # PaddleOCR 모델 캐시 유지 (재시작 시 재다운로드 방지)
       - paddleocr-models:/root/.paddlex
