@@ -5,7 +5,7 @@ python-multipart>=0.0.9
 
 # OCR
 paddlepaddle==3.0.0  # 3.3.0에 oneDNN PIR 버그 있음, 3.0.0 안정 버전 고정
-paddleocr>=2.7.3
+paddleocr==3.4.0     # 2026-01-29 PyPI 최신 안정 버전 고정
 
 # PDF support
 pypdfium2>=4.30.0

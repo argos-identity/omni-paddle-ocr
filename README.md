@@ -10,6 +10,7 @@
 | 항목 | 값 | 비고 |
 |------|-----|------|
 | **OCR 엔진** | **PP-OCRv5** (PaddlePaddle 3.0 기반) | PaddleOCR 최신 세대 |
+| paddleocr 패키지 | `3.4.0` (2026-01-29 최신, 고정) | paddlepaddle `3.0.0` 고정 |
 | OCR Detection 모델 | `PP-OCRv5_mobile_det` | EC2 8GB 안정 (~2.5 GiB 피크) |
 | OCR Recognition 모델 | `korean_PP-OCRv5_mobile_rec` / `en_PP-OCRv5_mobile_rec` | 언어별 자동 선택 |
 | PDF 렌더링 DPI | `300` | 한국어 인식률 최적화 (DPI 200 대비 대폭 향상) |
