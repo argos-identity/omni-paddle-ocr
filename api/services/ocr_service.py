@@ -92,9 +92,15 @@ class OCRService:
                 if lang not in self._instances:
                     logger.info(f"PaddleOCR 모델 로딩: lang={lang}")
                     loop = asyncio.get_event_loop()
+                    rec_model = settings.OCR_REC_MODEL_MAP.get(lang)
+                    rec_kwargs = {"text_recognition_model_name": rec_model} if rec_model else {}
                     ocr = await loop.run_in_executor(
                         self._executor,
-                        lambda: PaddleOCR(lang=lang, text_detection_model_name=settings.OCR_DET_MODEL, text_recognition_model_name=settings.OCR_REC_MODEL),
+                        lambda: PaddleOCR(
+                            lang=lang,
+                            text_detection_model_name=settings.OCR_DET_MODEL,
+                            **rec_kwargs,
+                        ),
                     )
                     self._instances[lang] = ocr
                     logger.info(f"PaddleOCR 모델 로딩 완료: lang={lang}")

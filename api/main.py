@@ -24,9 +24,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """앱 생명주기 관리: 시작 시 기본 모델 사전 로드, 종료 시 executor 정리"""
     logger.info(f"서버 시작: {settings.APP_NAME} v{settings.APP_VERSION}")
-    logger.info(f"기본 언어 모델 사전 로딩: {settings.DEFAULT_LANG}")
-    await ocr_service.preload(settings.DEFAULT_LANG)
-    logger.info("모델 로딩 완료. 서버 준비됨.")
+    preload_langs = [lang.strip() for lang in settings.PRELOAD_LANGS.split(",") if lang.strip()]
+    logger.info(f"언어 모델 사전 로딩: {preload_langs}")
+    for lang in preload_langs:
+        await ocr_service.preload(lang)
+    logger.info("모든 모델 로딩 완료. 서버 준비됨.")
     yield
     logger.info("서버 종료 중...")
     ocr_service.shutdown()
