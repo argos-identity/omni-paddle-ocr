@@ -4,7 +4,7 @@ uvicorn[standard]>=0.29.0
 python-multipart>=0.0.9
 
 # OCR
-paddlepaddle>=2.6.0
+paddlepaddle==3.0.0  # 3.3.0에 oneDNN PIR 버그 있음, 3.0.0 안정 버전 고정
 paddleocr>=2.7.3
 
 # PDF support
