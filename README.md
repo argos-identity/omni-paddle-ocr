@@ -96,16 +96,19 @@ curl -X POST http://<Server-IPAddress>:9125/api/v1/ocr \
 }
 ```
 
-| 필드 | 설명 |
-|------|------|
-| `pages[].texts` | 인식된 텍스트 라인 배열 |
-| `pages[].extracted_text` | 전체 텍스트 (줄바꿈 구분) |
-| `pages[].metrics.char_count` | 총 문자 수 |
-| `pages[].metrics.word_count` | 총 단어 수 |
-| `pages[].metrics.line_count` | 총 라인 수 |
-| `elapsed_ms` | OCR 처리 시간 (ms) |
-| `total_pages` | 처리된 페이지 수 |
-
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `pages` | `array` | 페이지별 OCR 결과 목록 |
+| `pages[].page` | `integer` | 페이지 번호 (1부터 시작) |
+| `pages[].texts` | `string[]` | 인식된 텍스트 라인 배열 |
+| `pages[].extracted_text` | `string` | 전체 텍스트 (줄바꿈 구분) |
+| `pages[].metrics.char_count` | `integer` | 총 문자 수 |
+| `pages[].metrics.word_count` | `integer` | 총 단어 수 |
+| `pages[].metrics.line_count` | `integer` | 총 라인 수 |
+| `total_pages` | `integer` | 처리된 전체 페이지 수 |
+| `elapsed_ms` | `number` | OCR 처리 시간 (ms) |
+| `lang` | `string` | 사용된 OCR 언어 |
+| `filename` | `string \| null` | 업로드된 파일명 (없으면 `null`) |
 ---
 
 ## Docker 빌드 및 실행
