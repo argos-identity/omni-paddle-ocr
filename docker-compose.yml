@@ -18,7 +18,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s  # 모델 로딩 시간 고려
+      start_period: 120s  # 모델 로딩 시간 고려 (최초 다운로드 ~90s + 여유)
 
 volumes:
   paddleocr-models:
